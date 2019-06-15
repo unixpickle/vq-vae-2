@@ -35,7 +35,7 @@ def main():
 def load_images():
     while True:
         for data, _ in create_data_loader():
-            yield data
+            yield torch.round(data)
 
 
 def create_data_loader():

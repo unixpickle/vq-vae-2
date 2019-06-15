@@ -26,6 +26,7 @@ class PixelCNNStart(nn.Module):
     """
 
     def __init__(self, depth_in, depth_out, cond_depth=None, horizontal=2, vertical=2):
+        super().__init__()
         self.depth_in = depth_in
         self.depth_out = depth_out
         self.horizontal = horizontal
@@ -104,7 +105,7 @@ class PixelCNNLayer(PixelCNNStart):
 
     def __init__(self, depth_in, cond_depth=None, horizontal=2, vertical=2):
         super().__init__(depth_in, depth_in, cond_depth, horizontal, vertical)
-        self.horiz_residual = nn.Conv2d(depth_out, depth_out, 1)
+        self.horiz_residual = nn.Conv2d(depth_in, depth_in, 1)
 
     def _init_directional_convs(self):
         self.vertical_conv = nn.Conv2d(self.depth_in, self.depth_out * 2,

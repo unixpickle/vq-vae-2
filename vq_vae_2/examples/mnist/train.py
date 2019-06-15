@@ -17,20 +17,25 @@ LR = 1e-3
 
 
 def main():
-    loader = create_data_loader()
     model = Model()
     if os.path.exists('pixel_cnn.pt'):
         model.load_state_dict(torch.load('pixel_cnn.pt'))
     optimizer = optim.Adam(model.parameters(), lr=LR)
 
-    for batch_idx, (data, _) in enumerate(loader):
-        logits = model(data)
-        loss = F.binary_cross_entropy_with_logits(logits, data)
+    for batch_idx, images in enumerate(load_images()):
+        logits = model(images)
+        loss = F.binary_cross_entropy_with_logits(logits, images)
         optimizer.zero_grad()
         loss.backward()
         optimizer.step()
         print('loss=%f' % loss.item())
         torch.save(model.state_dict(), 'pixel_cnn.pt')
+
+
+def load_images():
+    while True:
+        for data, _ in create_data_loader():
+            yield data
 
 
 def create_data_loader():

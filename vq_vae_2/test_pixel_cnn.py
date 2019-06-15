@@ -4,7 +4,7 @@ import numpy as np
 import torch
 import torch.nn as nn
 
-from .pixel_cnn import PixelConvA, PixelConvB
+from .pixel_cnn import PixelCNN, PixelConvA, PixelConvB
 
 TEST_IMG_WIDTH = 7
 TEST_IMG_HEIGHT = 11
@@ -27,13 +27,14 @@ TEST_IMG_DEPTH = 3
     ),
 ])
 def test_pixel_cnn_masking(start, middle):
+    network = PixelCNN(start, middle)
     outer_idx = 0
     for row in range(TEST_IMG_HEIGHT):
         for col in range(TEST_IMG_WIDTH):
             for z in range(TEST_IMG_DEPTH):
                 input_img = nn.Parameter(torch.randn(1, TEST_IMG_DEPTH_IN, TEST_IMG_HEIGHT,
                                                      TEST_IMG_WIDTH))
-                output = middle(*start(input_img))
+                output = network(input_img)
                 output = output[0][0, z, row, col] + 0.9 * output[1][0, z, row, col]
                 output.backward()
                 gradient = input_img.grad.data.numpy()

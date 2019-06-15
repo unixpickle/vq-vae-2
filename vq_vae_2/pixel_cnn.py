@@ -8,6 +8,36 @@ import torch.nn as nn
 import torch.nn.functional as F
 
 
+class PixelCNN(nn.Module):
+    """
+    A PixelCNN is a stack of PixelConv layers.
+    """
+
+    def __init__(self, *layers):
+        super().__init__()
+        for i, layer in enumerate(layers):
+            self.add_module('layer_%d' % i, layer)
+        self.layers = layers
+
+    def forward(self, images, conds=None):
+        """
+        Apply the stack of PixelConv layers.
+
+        It is assumed that the first layer is a
+        PixelConvA, and the rest are PixelConvB's.
+        This way, the first layer takes one input and the
+        rest take two.
+
+        Returns:
+            A tuple (vertical, horizontal), one for each
+              of the two directional stacks.
+        """
+        outputs = self.layers[0](images, conds=conds)
+        for layer in self.layers[1:]:
+            outputs = layer(*outputs, conds=conds)
+        return outputs
+
+
 class PixelConv(nn.Module):
     """
     An abstract base class for PixelCNN layers.

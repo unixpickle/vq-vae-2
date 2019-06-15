@@ -4,7 +4,7 @@ import numpy as np
 import torch
 import torch.nn as nn
 
-from .pixel_cnn import PixelCNNStart, PixelCNNLayer
+from .pixel_cnn import PixelConvA, PixelConvB
 
 TEST_IMG_WIDTH = 7
 TEST_IMG_HEIGHT = 11
@@ -14,19 +14,19 @@ TEST_IMG_DEPTH = 3
 
 @pytest.mark.parametrize('start,middle', [
     (
-        PixelCNNStart(TEST_IMG_DEPTH_IN, TEST_IMG_DEPTH, horizontal=2, vertical=2),
-        PixelCNNLayer(TEST_IMG_DEPTH, horizontal=2, vertical=2),
+        PixelConvA(TEST_IMG_DEPTH_IN, TEST_IMG_DEPTH, horizontal=2, vertical=2),
+        PixelConvB(TEST_IMG_DEPTH, horizontal=2, vertical=2),
     ),
     (
-        PixelCNNStart(TEST_IMG_DEPTH_IN, TEST_IMG_DEPTH, horizontal=3, vertical=2),
-        PixelCNNLayer(TEST_IMG_DEPTH, horizontal=3, vertical=2),
+        PixelConvA(TEST_IMG_DEPTH_IN, TEST_IMG_DEPTH, horizontal=3, vertical=2),
+        PixelConvB(TEST_IMG_DEPTH, horizontal=3, vertical=2),
     ),
     (
-        PixelCNNStart(TEST_IMG_DEPTH_IN, TEST_IMG_DEPTH, horizontal=2, vertical=3),
-        PixelCNNLayer(TEST_IMG_DEPTH, horizontal=2, vertical=3),
+        PixelConvA(TEST_IMG_DEPTH_IN, TEST_IMG_DEPTH, horizontal=2, vertical=3),
+        PixelConvB(TEST_IMG_DEPTH, horizontal=2, vertical=3),
     ),
 ])
-def test_layer_gradients(start, middle):
+def test_pixel_cnn_masking(start, middle):
     outer_idx = 0
     for row in range(TEST_IMG_HEIGHT):
         for col in range(TEST_IMG_WIDTH):
@@ -38,7 +38,7 @@ def test_layer_gradients(start, middle):
                 output.backward()
                 gradient = input_img.grad.data.numpy()
                 if outer_idx > 0:
-                    assert abs(np.max(gradient)) > 1e-4
+                    assert abs(np.max(gradient)) > 1e-4, 'at %d,%d,%d' % (row, col, z)
                 inner_idx = 0
                 for inner_row in range(TEST_IMG_HEIGHT):
                     for inner_col in range(TEST_IMG_WIDTH):

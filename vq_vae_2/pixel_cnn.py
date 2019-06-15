@@ -94,7 +94,6 @@ class PixelCNNLayer(PixelCNNStart):
 
     Args:
         depth_in: the number of input filters.
-        depth_out: the number of output filters.
         cond_depth: the number of conditioning channels.
           If None, this is an unconditional model.
         horizontal: the receptive field of the horizontal
@@ -103,8 +102,8 @@ class PixelCNNLayer(PixelCNNStart):
           stack.
     """
 
-    def __init__(self, depth_in, depth_out, cond_depth=None, horizontal=2, vertical=2):
-        super().__init__(depth_in, depth_out, cond_depth, horizontal, vertical)
+    def __init__(self, depth_in, cond_depth=None, horizontal=2, vertical=2):
+        super().__init__(depth_in, depth_in, cond_depth, horizontal, vertical)
         self.horiz_residual = nn.Conv2d(depth_out, depth_out, 1)
 
     def _init_directional_convs(self):

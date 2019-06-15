@@ -38,7 +38,7 @@ def test_pixel_cnn_masking(start, middle):
                 output.backward()
                 gradient = input_img.grad.data.numpy()
                 if outer_idx > 0:
-                    assert abs(np.max(gradient)) > 1e-4, 'at %d,%d,%d' % (row, col, z)
+                    assert np.max(np.abs(gradient)) > 1e-4, 'at %d,%d,%d' % (row, col, z)
                 inner_idx = 0
                 for inner_row in range(TEST_IMG_HEIGHT):
                     for inner_col in range(TEST_IMG_WIDTH):

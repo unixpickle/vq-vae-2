@@ -16,6 +16,9 @@ class Model(nn.Module):
             PixelConvB(64, 64),
             PixelConvB(64, 64),
             PixelConvB(64, 64),
+            PixelConvB(64, 64),
+            PixelConvB(64, 64),
+            PixelConvB(64, 64),
         )
         self.to_logits = nn.Conv2d(64, 1, 1)
 

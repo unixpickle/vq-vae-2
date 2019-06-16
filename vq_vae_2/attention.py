@@ -40,12 +40,12 @@ class PixelAttention(nn.Module):
         results = []
         for image in images:
             batch, num_channels, height, width = image.shape
-            image = image.permute(0, 2, 3, 1)
-            image = image.view(batch, height * width, num_channels)
-            result = self.attention(image)
+            result = image.permute(0, 2, 3, 1)
+            result = result.view(batch, height * width, num_channels)
+            result = self.attention(result)
             result = result.view(batch, height, width, num_channels)
             result = result.permute(0, 3, 1, 2)
-            results.append(result)
+            results.append(result + image)
         if len(results) == 1:
             return results[0]
         return tuple(results)

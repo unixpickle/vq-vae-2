@@ -4,15 +4,20 @@ import numpy as np
 import torch
 import torch.nn as nn
 
+from .attention import PixelAttention
 from .pixel_cnn import PixelCNN, PixelConvA, PixelConvB
 
 TEST_IMG_WIDTH = 7
 TEST_IMG_HEIGHT = 11
 TEST_IMG_DEPTH_IN = 2
-TEST_IMG_DEPTH = 3
+TEST_IMG_DEPTH = 4
 
 
 @pytest.mark.parametrize('start,middle', [
+    (
+        PixelConvA(TEST_IMG_DEPTH_IN, TEST_IMG_DEPTH, horizontal=2, vertical=3),
+        PixelAttention(TEST_IMG_DEPTH, num_heads=2),
+    ),
     (
         PixelConvA(TEST_IMG_DEPTH_IN, TEST_IMG_DEPTH, horizontal=2, vertical=2),
         PixelConvB(TEST_IMG_DEPTH, horizontal=2, vertical=2),

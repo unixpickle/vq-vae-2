@@ -10,7 +10,7 @@ import torch
 import torch.optim as optim
 
 from vq_vae_2.examples.mnist.model import Encoder, Decoder
-from vq_vae_2.examples.mnist.train import load_images
+from vq_vae_2.examples.mnist.train_generator import load_images
 from vq_vae_2.vq import vq_loss
 
 

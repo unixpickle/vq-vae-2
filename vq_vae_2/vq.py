@@ -2,6 +2,9 @@
 Vector-Quantization for the VQ-VAE itself.
 """
 
+import random
+
+import numpy as np
 import torch
 import torch.nn as nn
 import torch.nn.functional as F
@@ -72,17 +75,33 @@ class VQ(nn.Module):
 
         if self.training:
             self._update_tracker(idxs)
-            self._reinit_dead_centers(inputs)
+            self._reinit_dead_centers(channels_last)
 
         return embedded, embedded_pt, idxs
 
     def _update_tracker(self, idxs):
-        # TODO: this.
-        pass
+        raw_idxs = set(idxs.detach().cpu().numpy().flatten())
+        update = -np.ones([self.num_channels], dtype=np.int)
+        for idx in raw_idxs:
+            update[idx] = self.dead_rate
+        self.usage_count.data.add_(torch.from_numpy(update).to(self.usage_count.device).long())
+        self.usage_count.data.clamp_(0, self.dead_rate)
 
     def _reinit_dead_centers(self, inputs):
-        # TODO: this.
-        pass
+        counts = self.usage_count.detach().cpu().numpy()
+        new_dictionary = None
+        inputs_numpy = None
+        for i, count in enumerate(counts):
+            if count:
+                continue
+            if new_dictionary is None:
+                new_dictionary = self.dictionary.detach().cpu().numpy()
+            if inputs_numpy is None:
+                inputs_numpy = inputs.detach().cpu().numpy()[-1, inputs.shape[-1]]
+            new_dictionary[i] = random.choice(inputs_numpy)
+        if new_dictionary is not None:
+            dict_tensor = torch.from_numpy(new_dictionary).to(self.dictionary.device)
+            self.dictionary.data.copy_(dict_tensor)
 
 
 def embedding_distances(dictionary, tensor):

@@ -38,7 +38,8 @@ def main():
         loss.backward()
         optimizer.step()
         print('loss=%f' % loss.item())
-        torch.save(generator.state_dict(), 'gen.pt')
+        if not batch_idx % 100:
+            torch.save(generator.state_dict(), 'gen.pt')
 
 
 def load_images():

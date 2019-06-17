@@ -10,6 +10,15 @@ import torch.nn as nn
 import torch.nn.functional as F
 
 
+def vq_loss(inputs, embedded, commitment=0.25):
+    """
+    Compute the codebook and commitment losses for an
+    input-output pair from a VQ layer.
+    """
+    return (torch.mean(torch.pow(inputs.detach() - embedded, 2)) +
+            commitment * torch.mean(torch.pow(inputs - embedded.detach(), 2)))
+
+
 class VQ(nn.Module):
     """
     A vector quantization layer.
@@ -28,6 +37,7 @@ class VQ(nn.Module):
     """
 
     def __init__(self, num_channels, num_latents, dead_rate=100):
+        super().__init__()
         self.num_channels = num_channels
         self.num_latents = num_latents
         self.dead_rate = dead_rate
@@ -63,7 +73,7 @@ class VQ(nn.Module):
             # NCHW to NHWC
             channels_last = inputs.permute(0, 2, 3, 1).contiguous()
 
-        diffs = embedding_distances(channels_last)
+        diffs = embedding_distances(self.dictionary, channels_last)
         idxs = torch.argmin(diffs, dim=-1)
         embedded = F.embedding(idxs, self.dictionary)
 
@@ -81,7 +91,7 @@ class VQ(nn.Module):
 
     def _update_tracker(self, idxs):
         raw_idxs = set(idxs.detach().cpu().numpy().flatten())
-        update = -np.ones([self.num_channels], dtype=np.int)
+        update = -np.ones([self.num_latents], dtype=np.int)
         for idx in raw_idxs:
             update[idx] = self.dead_rate
         self.usage_count.data.add_(torch.from_numpy(update).to(self.usage_count.device).long())
@@ -97,7 +107,7 @@ class VQ(nn.Module):
             if new_dictionary is None:
                 new_dictionary = self.dictionary.detach().cpu().numpy()
             if inputs_numpy is None:
-                inputs_numpy = inputs.detach().cpu().numpy()[-1, inputs.shape[-1]]
+                inputs_numpy = inputs.detach().cpu().numpy().reshape([-1, inputs.shape[-1]])
             new_dictionary[i] = random.choice(inputs_numpy)
         if new_dictionary is not None:
             dict_tensor = torch.from_numpy(new_dictionary).to(self.dictionary.device)

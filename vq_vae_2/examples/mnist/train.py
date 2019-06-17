@@ -10,7 +10,7 @@ import torch.optim as optim
 import torchvision.datasets
 import torchvision.transforms
 
-from vq_vae_2.examples.mnist.model import Model
+from vq_vae_2.examples.mnist.model import Generator
 
 BATCH_SIZE = 32
 LR = 1e-3
@@ -23,6 +23,7 @@ def main():
     optimizer = optim.Adam(model.parameters(), lr=LR)
 
     for batch_idx, images in enumerate(load_images()):
+        images = torch.round(images)
         logits = model(images)
         loss = F.binary_cross_entropy_with_logits(logits, images)
         optimizer.zero_grad()
@@ -35,7 +36,7 @@ def main():
 def load_images():
     while True:
         for data, _ in create_data_loader():
-            yield torch.round(data)
+            yield data
 
 
 def create_data_loader():

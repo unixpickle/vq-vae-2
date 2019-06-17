@@ -1,36 +1,44 @@
 """
-Train a PixelCNN on MNIST.
+Train a PixelCNN on MNIST using a pre-trained VQ-VAE.
 """
 
 import os
 
 import torch
-import torch.nn.functional as F
+import torch.nn as nn
 import torch.optim as optim
 import torchvision.datasets
 import torchvision.transforms
 
-from vq_vae_2.examples.mnist.model import Generator
+from vq_vae_2.examples.mnist.model import Encoder, Generator
 
 BATCH_SIZE = 32
 LR = 1e-3
 
 
 def main():
-    model = Model()
-    if os.path.exists('pixel_cnn.pt'):
-        model.load_state_dict(torch.load('pixel_cnn.pt'))
-    optimizer = optim.Adam(model.parameters(), lr=LR)
+    encoder = Encoder()
+    encoder.load_state_dict(torch.load('enc.pt'))
+    encoder.eval()
+
+    generator = Generator()
+    if os.path.exists('gen.pt'):
+        generator.load_state_dict(torch.load('gen.pt'))
+
+    optimizer = optim.Adam(generator.parameters(), lr=LR)
+    loss_fn = nn.CrossEntropyLoss()
 
     for batch_idx, images in enumerate(load_images()):
-        images = torch.round(images)
-        logits = model(images)
-        loss = F.binary_cross_entropy_with_logits(logits, images)
+        _, (_, _, encoded) = encoder(images)
+        logits = generator(encoded)
+        logits = logits.permute(0, 2, 3, 1).contiguous()
+        logits = logits.view(-1, logits.shape[-1])
+        loss = loss_fn(logits, encoded.view(-1))
         optimizer.zero_grad()
         loss.backward()
         optimizer.step()
         print('loss=%f' % loss.item())
-        torch.save(model.state_dict(), 'pixel_cnn.pt')
+        torch.save(generator.state_dict(), 'gen.pt')
 
 
 def load_images():

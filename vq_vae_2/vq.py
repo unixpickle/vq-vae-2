@@ -46,6 +46,22 @@ class VQ(nn.Module):
         self.usage_count = nn.Parameter(dead_rate * torch.ones(num_latents).long(),
                                         requires_grad=False)
 
+    def embed(self, idxs):
+        """
+        Convert encoded indices into embeddings.
+
+        Args:
+            idxs: an [N x H x W] or [N] Tensor.
+
+        Returns:
+            An [N x H x W x C] or [N x C] Tensor.
+        """
+        embedded = F.embedding(idxs, self.dictionary)
+        if len(embedded.shape) == 4:
+            # NHWC to NCHW
+            embedded = embedded.permute(0, 3, 1, 2).contiguous()
+        return embedded
+
     def forward(self, inputs):
         """
         Apply vector quantization.
@@ -75,12 +91,7 @@ class VQ(nn.Module):
 
         diffs = embedding_distances(self.dictionary, channels_last)
         idxs = torch.argmin(diffs, dim=-1)
-        embedded = F.embedding(idxs, self.dictionary)
-
-        if len(inputs.shape) == 4:
-            # NHWC to NCHW
-            embedded = embedded.permute(0, 3, 1, 2).contiguous()
-
+        embedded = self.embed(idxs)
         embedded_pt = embedded.detach() + (inputs - inputs.detach())
 
         if self.training:

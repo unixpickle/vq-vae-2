@@ -2,15 +2,16 @@
 Generate samples using the top-level prior.
 """
 
+import argparse
 import random
 
 from PIL import Image
 import numpy as np
 import torch
 
-from vq_vae_2.examples.hierarchical.model import TopPrior, make_vq_vae
+from vq_vae_2.examples.hierarchical.model import TopPrior, make_vae
 from vq_vae_2.examples.hierarchical.train_top import TOP_PRIOR_PATH
-from vq_vae_2.examples.hierarchical.train_vae import VAE_PATH, arg_parser
+from vq_vae_2.examples.hierarchical.train_vae import VAE_PATH
 
 NUM_SAMPLES = 4
 
@@ -19,7 +20,7 @@ def main():
     args = arg_parser().parse_args()
     device = torch.device(args.device)
 
-    vae = make_vq_vae()
+    vae = make_vae()
     vae.load_state_dict(torch.load(VAE_PATH))
     vae.to(device)
     vae.eval()
@@ -43,9 +44,9 @@ def main():
         top_embedded = vae.encoders[1].vq.embed(full_latents)
         bottom_embedded = vae.decoders[0]([top_embedded])
         decoded = torch.clamp(vae.decoders[1]([top_embedded, bottom_embedded]), 0, 1)
-    decoded = decoded.cpu().numpy()
+    decoded = decoded.permute(0, 2, 3, 1).cpu().numpy()
     decoded = np.concatenate(decoded, axis=1)
-    Image.fromarray((decoded * 255).astype(np.uint8)[0]).save('top_samples.png')
+    Image.fromarray((decoded * 255).astype(np.uint8)).save('top_samples.png')
 
 
 def sample_softmax(probs):
@@ -55,6 +56,12 @@ def sample_softmax(probs):
         if number <= 0:
             return i
     return len(probs) - 1
+
+
+def arg_parser():
+    parser = argparse.ArgumentParser()
+    parser.add_argument('--device', help='torch device', default='cuda')
+    return parser
 
 
 if __name__ == '__main__':

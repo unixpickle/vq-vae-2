@@ -52,7 +52,7 @@ class TopPrior(nn.Module):
             PixelAttention(512),
         )
         self.out_stack = nn.Sequential(
-            nn.Conv1d(1024, 512, 1),
+            nn.Conv2d(1024, 512, 1),
             Residual1x1(512),
             Residual1x1(512),
             Residual1x1(512),

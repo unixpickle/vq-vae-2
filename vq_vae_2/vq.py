@@ -142,5 +142,11 @@ def embedding_distances(dictionary, tensor):
     """
     dict_norms = torch.sum(torch.pow(dictionary, 2), dim=-1)
     tensor_norms = torch.sum(torch.pow(tensor, 2), dim=-1)
-    dots = torch.matmul(dictionary, tensor[..., None])[..., 0]
+
+    # Work-around for https://github.com/pytorch/pytorch/issues/18862.
+    exp_tensor = tensor[..., None].view(-1, tensor.shape[-1], 1)
+    exp_dict = dictionary[None].expand(exp_tensor.shape[0], *dictionary.shape)
+    dots = torch.bmm(exp_dict, exp_tensor)[..., 0]
+    dots = dots.view(*tensor.shape[:-1], dots.shape[-1])
+
     return -2 * dots + dict_norms + tensor_norms[..., None]

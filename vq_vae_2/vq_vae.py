@@ -48,7 +48,7 @@ class Encoder(nn.Module):
 
         See VQ.forward() for return values.
         """
-        return self.vq(self.forward(x))
+        return self.vq(self.encode(x))
 
 
 class QuarterEncoder(Encoder):

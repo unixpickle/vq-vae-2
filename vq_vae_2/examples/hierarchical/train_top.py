@@ -33,7 +33,7 @@ def main():
     optimizer = optim.Adam(top_prior.parameters())
     loss_fn = nn.CrossEntropyLoss()
 
-    data = load_images(args.data)
+    data = load_images(args.data, batch_size=2)
     for i in itertools.count():
         images = next(data).to(device)
         _, _, encoded = vae.encoders[1](vae.encoders[0].encode(images))

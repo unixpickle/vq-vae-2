@@ -6,6 +6,8 @@ import argparse
 import itertools
 import os
 
+from PIL import Image
+import numpy as np
 import torch
 import torch.optim as optim
 
@@ -25,7 +27,8 @@ def main():
     optimizer = optim.Adam(model.parameters())
     data = load_images(args.data)
     for i in itertools.count():
-        terms = model(next(data).to(device))
+        images = next(data).to(device)
+        terms = model(images)
         print('step %d: mse=%f mse_top=%f' %
               (i, terms['mse'][-1].item(), terms['mse'][0].item()))
         optimizer.zero_grad()
@@ -33,6 +36,23 @@ def main():
         optimizer.step()
         if not i % 10:
             torch.save(model.state_dict(), VAE_PATH)
+            save_reconstructions(model, images, terms)
+
+
+def save_reconstructions(vae, images, terms):
+    real_recons = torch.clamp(terms['reconstructions'][-1], 0, 1)
+    real_recons = real_recons.permute(0, 2, 3, 1).detach().cpu().numpy()
+
+    # Create reconstructions using only the top latents.
+    top_embed, _, _ = vae.encoders[1](vae.encoders[0].encode(images))
+    bottom_embed, _, _ = vae.encoders[0].vq(terms['reconstructions'][0])
+    top_recons = torch.clamp(vae.decoders[1]([top_embed, bottom_embed]), 0, 1)
+    top_recons = top_recons.permute(0, 2, 3, 1).detach().cpu().numpy()
+
+    images = images.permute(0, 2, 3, 1).detach().cpu().numpy()
+
+    columns = np.concatenate([top_recons, real_recons, images], axis=-1)
+    Image.fromarray((columns * 255).astype('uint8')).save('reconstructions.png')
 
 
 def arg_parser():

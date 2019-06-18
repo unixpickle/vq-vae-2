@@ -68,6 +68,7 @@ class TopPrior(nn.Module):
 
 class Residual1x1(nn.Module):
     def __init__(self, num_channels):
+        super().__init__()
         self.conv1 = nn.Conv2d(num_channels, num_channels, 1)
         self.conv2 = nn.Conv2d(num_channels, num_channels, 1)
 

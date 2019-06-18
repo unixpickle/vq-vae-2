@@ -128,8 +128,9 @@ class QuarterDecoder(Decoder):
     def forward(self, inputs):
         assert len(inputs) == 1
         x = inputs[0]
-        x = self.residual1(x)
-        x = self.residual2(x)
+        x = x + self.residual1(x)
+        x = x + self.residual2(x)
+        x = F.relu(x)
         x = self.conv1(x)
         x = F.relu(x)
         x = self.conv2(x)

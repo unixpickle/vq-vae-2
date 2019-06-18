@@ -29,7 +29,11 @@ def load_single_images(dir_path):
             for entry in listing:
                 if not (entry.name.endswith('.png') or entry.name.endswith('.jpg')):
                     continue
-                img = Image.open(entry.path)
+                try:
+                    img = Image.open(entry.path)
+                except OSError:
+                    # Ignore corrupt images.
+                    continue
                 width, height = img.size
                 scale = IMAGE_SIZE / min(width, height)
                 img = img.resize((round(scale * width), round(scale * height)))

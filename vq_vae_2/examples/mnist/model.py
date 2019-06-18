@@ -5,48 +5,20 @@ A basic PixelCNN model.
 import torch.nn as nn
 
 from vq_vae_2.pixel_cnn import PixelCNN, PixelConvA, PixelConvB
-from vq_vae_2.vq import VQ
+from vq_vae_2.vq_vae import QuarterDecoder, QuarterEncoder
 
 LATENT_SIZE = 16
 LATENT_COUNT = 32
 
 
-class Encoder(nn.Module):
+class Encoder(QuarterEncoder):
     def __init__(self):
-        super().__init__()
-        self.layers = nn.Sequential(
-            nn.Conv2d(1, LATENT_SIZE, 3, stride=2, padding=1),
-            nn.ReLU(),
-            nn.Conv2d(LATENT_SIZE, LATENT_SIZE, 3, stride=2, padding=1),
-            nn.ReLU(),
-            nn.Conv2d(LATENT_SIZE, LATENT_SIZE, 3, padding=1),
-            nn.ReLU(),
-            nn.Conv2d(LATENT_SIZE, LATENT_SIZE, 3, padding=1),
-        )
-        self.vq = VQ(LATENT_SIZE, LATENT_COUNT)
-
-    def forward(self, x):
-        x = self.layers(x)
-        return x, self.vq(x)
+        super().__init__(1, LATENT_SIZE, LATENT_COUNT)
 
 
-class Decoder(nn.Module):
+class Decoder(QuarterDecoder):
     def __init__(self):
-        super().__init__()
-        self.layers = nn.Sequential(
-            nn.Conv2d(LATENT_SIZE, LATENT_SIZE, 3, padding=1),
-            nn.ReLU(),
-            nn.Conv2d(LATENT_SIZE, LATENT_SIZE, 3, padding=1),
-            nn.ReLU(),
-            nn.ConvTranspose2d(LATENT_SIZE, LATENT_SIZE, 4, stride=2, padding=1),
-            nn.ReLU(),
-            nn.ConvTranspose2d(LATENT_SIZE, LATENT_SIZE, 4, stride=2, padding=1),
-            nn.ReLU(),
-            nn.Conv2d(LATENT_SIZE, 1, 1),
-        )
-
-    def forward(self, x):
-        return self.layers(x)
+        super().__init__(LATENT_SIZE, 1)
 
 
 class Generator(nn.Module):

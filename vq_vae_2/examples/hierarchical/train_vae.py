@@ -51,7 +51,7 @@ def save_reconstructions(vae, images, terms):
 
     images = images.permute(0, 2, 3, 1).detach().cpu().numpy()
 
-    columns = np.concatenate([top_recons, real_recons, images], axis=-1)
+    columns = np.concatenate([top_recons, real_recons, images], axis=-2)
     columns = np.concatenate(columns, axis=0)
     Image.fromarray((columns * 255).astype('uint8')).save('reconstructions.png')
 

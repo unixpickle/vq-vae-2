@@ -30,7 +30,7 @@ def main():
         top_prior.load_state_dict(torch.load(TOP_PRIOR_PATH, map_location='cpu'))
     top_prior.to(device)
 
-    optimizer = optim.Adam(top_prior.parameters())
+    optimizer = optim.Adam(top_prior.parameters(), lr=1e-4)
     loss_fn = nn.CrossEntropyLoss()
 
     data = load_images(args.data, batch_size=2)

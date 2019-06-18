@@ -28,6 +28,7 @@ def main():
     top_prior = TopPrior()
     if os.path.exists(TOP_PRIOR_PATH):
         top_prior.load_state_dict(torch.load(TOP_PRIOR_PATH, map_location='cpu'))
+    top_prior.to(device)
 
     optimizer = optim.Adam(top_prior.parameters())
     loss_fn = nn.CrossEntropyLoss()

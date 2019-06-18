@@ -14,5 +14,5 @@ This is a work-in-progress. Here's my checklist:
   * [x] Test VQ-VAE + PixelCNN on MNIST
   * [x] Implement hierarchical VQ-VAE
   * [x] Train hierarchical VQ-VAE on large images
+  * [x] Train top PixelCNN on large images
   * [ ] Train bottom PixelCNN on large images
-  * [ ] Train top PixelCNN on large images

@@ -91,7 +91,7 @@ class HalfEncoder(Encoder):
         self.residual2 = _make_residual(out_channels)
 
     def encode(self, x):
-        x = self.conv1(x)
+        x = self.conv(x)
         x = x + self.residual1(x)
         x = x + self.residual2(x)
         return x

@@ -9,35 +9,26 @@ import numpy as np
 import torch
 import torch.optim as optim
 
-from vq_vae_2.examples.mnist.model import Encoder, Decoder
+from vq_vae_2.examples.mnist.model import make_vq_vae
 from vq_vae_2.examples.mnist.train_generator import load_images
-from vq_vae_2.vq import vq_loss
 
 
 def main():
-    enc = Encoder()
-    dec = Decoder()
-    if os.path.exists('enc.pt'):
-        enc.load_state_dict(torch.load('enc.pt'))
-    if os.path.exists('dec.pt'):
-        dec.load_state_dict(torch.load('dec.pt'))
-
-    optimizer = optim.Adam(list(enc.parameters()) + list(dec.parameters()))
-    enc.train()
+    vae = make_vq_vae()
+    if os.path.exists('vae.pt'):
+        vae.load_state_dict(torch.load('vae.pt'))
+    optimizer = optim.Adam(vae.parameters())
     for i, batch in enumerate(load_images()):
-        raw_enc, (embedded, embedded_pt, _) = enc(batch)
-        decoded = dec(embedded_pt)
-        mse_loss = torch.mean(torch.pow(decoded - batch, 2))
-        loss = mse_loss + vq_loss(raw_enc, embedded)
-        print('step %d: loss=%f mse=%f' % (i, loss.item(), mse_loss.item()))
+        terms = vae(batch)
+        print('step %d: loss=%f mse=%f' %
+              (i, terms['loss'].item(), terms['mse'][-1].item()))
         optimizer.zero_grad()
-        loss.backward()
+        terms['loss'].backward()
         optimizer.step()
         if not i % 10:
-            torch.save(enc.state_dict(), 'enc.pt')
-            torch.save(dec.state_dict(), 'dec.pt')
+            torch.save(vae.state_dict(), 'vae.pt')
         if not i % 100:
-            save_reconstructions(batch, decoded)
+            save_reconstructions(batch, terms['reconstructions'][-1])
 
 
 def save_reconstructions(batch, decoded):

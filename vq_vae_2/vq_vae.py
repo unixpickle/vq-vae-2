@@ -62,15 +62,6 @@ class QuarterEncoder(Encoder):
         super().__init__(out_channels, num_latents, **kwargs)
         self.conv1 = nn.Conv2d(in_channels, out_channels, 4, stride=2)
         self.conv2 = nn.Conv2d(out_channels, out_channels, 4, stride=2)
-
-        def _make_residual():
-            return nn.Sequential(
-                nn.ReLU(),
-                nn.Conv2d(out_channels, out_channels, 3, padding=1),
-                nn.ReLU(),
-                nn.Conv2d(out_channels, out_channels, 1),
-            )
-
         self.residual1 = _make_residual(out_channels)
         self.residual2 = _make_residual(out_channels)
 
@@ -119,11 +110,11 @@ class QuarterDecoder(Decoder):
     """
 
     def __init__(self, in_channels, out_channels):
+        super().__init__()
         self.residual1 = _make_residual(in_channels)
         self.residual2 = _make_residual(in_channels)
-
-        self.conv1 = nn.Conv2d(in_channels, in_channels, 4, stride=2, padding=1)
-        self.conv2 = nn.Conv2d(in_channels, out_channels, 4, stride=2, padding=1)
+        self.conv1 = nn.ConvTranspose2d(in_channels, in_channels, 4, stride=2, padding=1)
+        self.conv2 = nn.ConvTranspose2d(in_channels, out_channels, 4, stride=2, padding=1)
 
     def forward(self, inputs):
         assert len(inputs) == 1
@@ -167,7 +158,9 @@ class VQVAE(nn.Module):
         Returns:
             A dict of Tensors, containing at least:
               loss: the total training loss.
-              final_mse: the MSE from the final decoder.
+              mse: the MSE from each decoder.
+              reconstructions: a reconstruction Tensor
+                from each decoder.
         """
         all_encoded = [inputs]
         all_vq_outs = []
@@ -179,15 +172,20 @@ class VQVAE(nn.Module):
             all_encoded.append(encoded)
             all_vq_outs.append(embedded_pt)
             total_vq_loss = total_vq_loss + vq_loss(encoded, embedded, commitment=commitment)
-        last_mse = None
-        for i, decoder in self.decoders:
+        mses = []
+        reconstructions = []
+        for i, decoder in enumerate(self.decoders):
             dec_inputs = all_vq_outs[::-1][:i + 1]
             target = all_encoded[::-1][i + 1]
-            last_mse = torch.mean(torch.pow(decoder(dec_inputs) - target, 2))
-            total_vq_mse = total_vq_mse + last_mse
+            recon = decoder(dec_inputs)
+            reconstructions.append(recon)
+            mse = torch.mean(torch.pow(recon - target, 2))
+            total_vq_mse = total_vq_mse + mse
+            mses.append(mse)
         return {
             'loss': total_vq_loss + total_vq_mse,
-            'final_mse': last_mse,
+            'mse': mses,
+            'reconstructions': reconstructions,
         }
 
 

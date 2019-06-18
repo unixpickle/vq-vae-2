@@ -8,15 +8,13 @@ from PIL import Image
 import numpy as np
 import torch
 
-from vq_vae_2.examples.mnist.model import Encoder, Decoder, Generator
+from vq_vae_2.examples.mnist.model import Generator, make_vq_vae
 
 
 def main():
-    encoder = Encoder()
-    encoder.load_state_dict(torch.load('enc.pt'))
-    encoder.eval()
-    decoder = Decoder()
-    decoder.load_state_dict(torch.load('dec.pt'))
+    vae = make_vq_vae()
+    vae.load_state_dict(torch.load('vae.pt'))
+    vae.eval()
     generator = Generator()
     generator.load_state_dict(torch.load('gen.pt'))
 
@@ -28,8 +26,8 @@ def main():
                 probs = outputs[0, :, row, col]
                 inputs[0, row, col] = sample_softmax(probs)
         print('done row', row)
-    embedded = encoder.vq.embed(torch.from_numpy(inputs))
-    decoded = torch.clamp(decoder(embedded), 0, 1).detach().numpy()
+    embedded = vae.encoders[0].vq.embed(torch.from_numpy(inputs))
+    decoded = torch.clamp(vae.decoders[0](embedded), 0, 1).detach().numpy()
     Image.fromarray((decoded * 255).astype(np.uint8)[0, 0]).save('digit.png')
 
 

@@ -1,24 +1,19 @@
 """
-A basic PixelCNN model.
+A basic PixelCNN + VQ-VAE model.
 """
 
 import torch.nn as nn
 
 from vq_vae_2.pixel_cnn import PixelCNN, PixelConvA, PixelConvB
-from vq_vae_2.vq_vae import QuarterDecoder, QuarterEncoder
+from vq_vae_2.vq_vae import QuarterDecoder, QuarterEncoder, VQVAE
 
 LATENT_SIZE = 16
 LATENT_COUNT = 32
 
 
-class Encoder(QuarterEncoder):
-    def __init__(self):
-        super().__init__(1, LATENT_SIZE, LATENT_COUNT)
-
-
-class Decoder(QuarterDecoder):
-    def __init__(self):
-        super().__init__(LATENT_SIZE, 1)
+def make_vq_vae():
+    return VQVAE([QuarterEncoder(1, LATENT_SIZE, LATENT_COUNT)],
+                 [QuarterDecoder(LATENT_SIZE, 1)])
 
 
 class Generator(nn.Module):

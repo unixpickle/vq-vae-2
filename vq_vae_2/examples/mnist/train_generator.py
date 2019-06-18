@@ -10,16 +10,16 @@ import torch.optim as optim
 import torchvision.datasets
 import torchvision.transforms
 
-from vq_vae_2.examples.mnist.model import Encoder, Generator
+from vq_vae_2.examples.mnist.model import Generator, make_vq_vae
 
 BATCH_SIZE = 32
 LR = 1e-3
 
 
 def main():
-    encoder = Encoder()
-    encoder.load_state_dict(torch.load('enc.pt'))
-    encoder.eval()
+    vae = make_vq_vae()
+    vae.load_state_dict(torch.load('vae.pt'))
+    vae.eval()
 
     generator = Generator()
     if os.path.exists('gen.pt'):
@@ -32,7 +32,7 @@ def main():
     for batch_idx, images in enumerate(load_images()):
         losses = []
         for img_set in [images, next(test_images)]:
-            _, (_, _, encoded) = encoder(img_set)
+            _, _, encoded = vae.encoders[0](img_set)
             logits = generator(encoded)
             logits = logits.permute(0, 2, 3, 1).contiguous()
             logits = logits.view(-1, logits.shape[-1])

@@ -14,22 +14,26 @@ from vq_vae_2.examples.mnist.model import Generator, make_vq_vae
 
 BATCH_SIZE = 32
 LR = 1e-3
+DEVICE = torch.device('cpu')
 
 
 def main():
     vae = make_vq_vae()
-    vae.load_state_dict(torch.load('vae.pt'))
+    vae.load_state_dict(torch.load('vae.pt', map_location='cpu'))
+    vae.to(DEVICE)
     vae.eval()
 
     generator = Generator()
     if os.path.exists('gen.pt'):
-        generator.load_state_dict(torch.load('gen.pt'))
+        generator.load_state_dict(torch.load('gen.pt', map_location='cpu'))
+    generator.to(DEVICE)
 
     optimizer = optim.Adam(generator.parameters(), lr=LR)
     loss_fn = nn.CrossEntropyLoss()
 
     test_images = load_images(train=False)
     for batch_idx, images in enumerate(load_images()):
+        images = images.to(DEVICE)
         losses = []
         for img_set in [images, next(test_images)]:
             _, _, encoded = vae.encoders[0](img_set)

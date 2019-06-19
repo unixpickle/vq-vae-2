@@ -35,7 +35,7 @@ def main():
     for batch_idx, images in enumerate(load_images()):
         images = images.to(DEVICE)
         losses = []
-        for img_set in [images, next(test_images)]:
+        for img_set in [images, next(test_images).to(DEVICE)]:
             _, _, encoded = vae.encoders[0](img_set)
             logits = generator(encoded)
             logits = logits.permute(0, 2, 3, 1).contiguous()

@@ -24,35 +24,41 @@ class TopPrior(nn.Module):
         self.pixel_cnn = PixelCNN(
             PixelConvA(512, 512),
 
-            PixelConvB(512),
-            PixelConvB(512),
-            PixelConvB(512),
-            PixelConvB(512),
+            PixelConvB(512, norm_groups=8),
+            PixelConvB(512, norm_groups=8),
+            PixelConvB(512, norm_groups=8),
+            PixelConvB(512, norm_groups=8),
             PixelAttention(512),
 
-            PixelConvB(512),
-            PixelConvB(512),
-            PixelConvB(512),
-            PixelConvB(512),
-            PixelConvB(512),
+            PixelConvB(512, norm_groups=8),
+            PixelConvB(512, norm_groups=8),
+            PixelConvB(512, norm_groups=8),
+            PixelConvB(512, norm_groups=8),
+            PixelConvB(512, norm_groups=8),
             PixelAttention(512),
 
-            PixelConvB(512),
-            PixelConvB(512),
-            PixelConvB(512),
-            PixelConvB(512),
-            PixelConvB(512),
+            PixelConvB(512, norm_groups=8),
+            PixelConvB(512, norm_groups=8),
+            PixelConvB(512, norm_groups=8),
+            PixelConvB(512, norm_groups=8),
+            PixelConvB(512, norm_groups=8),
             PixelAttention(512),
 
-            PixelConvB(512),
-            PixelConvB(512),
-            PixelConvB(512),
-            PixelConvB(512),
-            PixelConvB(512),
+            PixelConvB(512, norm_groups=8),
+            PixelConvB(512, norm_groups=8),
+            PixelConvB(512, norm_groups=8),
+            PixelConvB(512, norm_groups=8),
+            PixelConvB(512, norm_groups=8),
             PixelAttention(512),
         )
         self.out_stack = nn.Sequential(
             nn.Conv2d(1024, 512, 1),
+            Residual1x1(512),
+            Residual1x1(512),
+            Residual1x1(512),
+            Residual1x1(512),
+            Residual1x1(512),
+            Residual1x1(512),
             Residual1x1(512),
             Residual1x1(512),
             Residual1x1(512),
@@ -67,10 +73,11 @@ class TopPrior(nn.Module):
 
 
 class Residual1x1(nn.Module):
-    def __init__(self, num_channels):
+    def __init__(self, num_channels, num_groups=8):
         super().__init__()
         self.conv1 = nn.Conv2d(num_channels, num_channels, 1)
         self.conv2 = nn.Conv2d(num_channels, num_channels, 1)
+        self.norm = nn.GroupNorm(num_groups, num_channels)
 
     def forward(self, x):
         inputs = x
@@ -78,4 +85,4 @@ class Residual1x1(nn.Module):
         x = self.conv1(x)
         x = F.relu(x)
         x = self.conv2(x)
-        return inputs + x
+        return inputs + self.norm(x)

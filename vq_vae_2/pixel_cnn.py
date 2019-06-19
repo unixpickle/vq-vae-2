@@ -151,10 +151,15 @@ class PixelConvB(PixelConv):
           stack.
     """
 
-    def __init__(self, depth_in, cond_depth=None, horizontal=2, vertical=2):
+    def __init__(self, depth_in, cond_depth=None, norm_groups=None, horizontal=2, vertical=2):
         super().__init__(depth_in, depth_in, cond_depth=cond_depth, horizontal=horizontal,
                          vertical=vertical)
         self.horiz_residual = nn.Conv2d(depth_in, depth_in, 1)
+        self.vert_norm = lambda x: x
+        self.horiz_norm = lambda x: x
+        if norm_groups is not None:
+            self.vert_norm = nn.GroupNorm(norm_groups, depth_in)
+            self.horiz_norm = nn.GroupNorm(norm_groups, depth_in)
 
     def forward(self, vert_in, horiz_in, conds=None):
         """
@@ -172,8 +177,8 @@ class PixelConvB(PixelConv):
               of the two directional stacks.
         """
         vert_out, horiz_out = self._run_stacks(vert_in, horiz_in, conds)
-        horiz_out = horiz_in + self.horiz_residual(horiz_out)
-        return vert_out, horiz_out
+        horiz_out = horiz_in + self.horiz_norm(self.horiz_residual(horiz_out))
+        return self.vert_norm(vert_out), horiz_out
 
     def _init_directional_convs(self):
         self.vertical_conv = nn.Conv2d(self.depth_in, self.depth_out * 2,

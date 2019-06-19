@@ -22,13 +22,13 @@ class Generator(nn.Module):
         self.embed = nn.Embedding(LATENT_COUNT, 64)
         self.model = PixelCNN(
             PixelConvA(64, 64),
-            PixelConvB(64, 64),
-            PixelConvB(64, 64),
-            PixelConvB(64, 64),
-            PixelConvB(64, 64),
-            PixelConvB(64, 64),
-            PixelConvB(64, 64),
-            PixelConvB(64, 64),
+            PixelConvB(64, 64, norm_groups=4),
+            PixelConvB(64, 64, norm_groups=4),
+            PixelConvB(64, 64, norm_groups=4),
+            PixelConvB(64, 64, norm_groups=4),
+            PixelConvB(64, 64, norm_groups=4),
+            PixelConvB(64, 64, norm_groups=4),
+            PixelConvB(64, 64, norm_groups=4),
         )
         self.to_logits = nn.Conv2d(64, LATENT_COUNT, 1)
 

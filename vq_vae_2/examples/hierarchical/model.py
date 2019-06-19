@@ -63,6 +63,7 @@ class TopPrior(nn.Module):
             Residual1x1(512),
             Residual1x1(512),
             Residual1x1(512),
+            nn.Conv2d(512, 512, 1),
         )
 
     def forward(self, x):

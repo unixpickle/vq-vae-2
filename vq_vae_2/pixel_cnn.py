@@ -151,15 +151,15 @@ class PixelConvB(PixelConv):
           stack.
     """
 
-    def __init__(self, depth_in, cond_depth=None, norm_groups=None, horizontal=2, vertical=2):
+    def __init__(self, depth_in, cond_depth=None, norm=False, horizontal=2, vertical=2):
         super().__init__(depth_in, depth_in, cond_depth=cond_depth, horizontal=horizontal,
                          vertical=vertical)
         self.horiz_residual = nn.Conv2d(depth_in, depth_in, 1)
         self.vert_norm = lambda x: x
         self.horiz_norm = lambda x: x
-        if norm_groups is not None:
-            self.vert_norm = nn.GroupNorm(norm_groups, depth_in)
-            self.horiz_norm = nn.GroupNorm(norm_groups, depth_in)
+        if norm:
+            self.vert_norm = ChannelNorm(depth_in)
+            self.horiz_norm = ChannelNorm(depth_in)
 
     def forward(self, vert_in, horiz_in, conds=None):
         """
@@ -192,6 +192,23 @@ class PixelConvB(PixelConv):
 
     def _run_padded_horizontal(self, horiz_in):
         return self.horizontal_conv(F.pad(horiz_in, (self.horizontal, 0, 0, 0)))
+
+
+class ChannelNorm(nn.Module):
+    """
+    A layer which applies layer normalization to the
+    channels at each spacial location separately.
+    """
+
+    def __init__(self, num_channels):
+        super().__init__()
+        self.norm = nn.LayerNorm((num_channels,))
+
+    def forward(self, x):
+        x = x.permute(0, 2, 3, 1).contiguous()
+        x = self.norm(x)
+        x = x.permute(0, 3, 1, 2).contiguous()
+        return x
 
 
 def gated_activation(outputs):

@@ -7,7 +7,7 @@ import torch.nn as nn
 import torch.nn.functional as F
 
 from vq_vae_2.attention import PixelAttention
-from vq_vae_2.pixel_cnn import PixelCNN, PixelConvA, PixelConvB
+from vq_vae_2.pixel_cnn import ChannelNorm, PixelCNN, PixelConvA, PixelConvB
 from vq_vae_2.vq_vae import HalfDecoder, HalfQuarterDecoder, HalfEncoder, QuarterEncoder, VQVAE
 
 
@@ -24,31 +24,31 @@ class TopPrior(nn.Module):
         self.pixel_cnn = PixelCNN(
             PixelConvA(512, 512),
 
-            PixelConvB(512, norm_groups=8),
-            PixelConvB(512, norm_groups=8),
-            PixelConvB(512, norm_groups=8),
-            PixelConvB(512, norm_groups=8),
+            PixelConvB(512, norm=True),
+            PixelConvB(512, norm=True),
+            PixelConvB(512, norm=True),
+            PixelConvB(512, norm=True),
             PixelAttention(512),
 
-            PixelConvB(512, norm_groups=8),
-            PixelConvB(512, norm_groups=8),
-            PixelConvB(512, norm_groups=8),
-            PixelConvB(512, norm_groups=8),
-            PixelConvB(512, norm_groups=8),
+            PixelConvB(512, norm=True),
+            PixelConvB(512, norm=True),
+            PixelConvB(512, norm=True),
+            PixelConvB(512, norm=True),
+            PixelConvB(512, norm=True),
             PixelAttention(512),
 
-            PixelConvB(512, norm_groups=8),
-            PixelConvB(512, norm_groups=8),
-            PixelConvB(512, norm_groups=8),
-            PixelConvB(512, norm_groups=8),
-            PixelConvB(512, norm_groups=8),
+            PixelConvB(512, norm=True),
+            PixelConvB(512, norm=True),
+            PixelConvB(512, norm=True),
+            PixelConvB(512, norm=True),
+            PixelConvB(512, norm=True),
             PixelAttention(512),
 
-            PixelConvB(512, norm_groups=8),
-            PixelConvB(512, norm_groups=8),
-            PixelConvB(512, norm_groups=8),
-            PixelConvB(512, norm_groups=8),
-            PixelConvB(512, norm_groups=8),
+            PixelConvB(512, norm=True),
+            PixelConvB(512, norm=True),
+            PixelConvB(512, norm=True),
+            PixelConvB(512, norm=True),
+            PixelConvB(512, norm=True),
             PixelAttention(512),
         )
         self.out_stack = nn.Sequential(
@@ -74,11 +74,11 @@ class TopPrior(nn.Module):
 
 
 class Residual1x1(nn.Module):
-    def __init__(self, num_channels, num_groups=8):
+    def __init__(self, num_channels):
         super().__init__()
         self.conv1 = nn.Conv2d(num_channels, num_channels, 1)
         self.conv2 = nn.Conv2d(num_channels, num_channels, 1)
-        self.norm = nn.GroupNorm(num_groups, num_channels)
+        self.norm = ChannelNorm(num_channels)
 
     def forward(self, x):
         inputs = x

@@ -18,52 +18,52 @@ def make_vae():
 
 
 class TopPrior(nn.Module):
-    def __init__(self):
+    def __init__(self, depth=128, num_heads=2):
         super().__init__()
-        self.embed = nn.Embedding(512, 512)
+        self.embed = nn.Embedding(512, depth)
         self.pixel_cnn = PixelCNN(
-            PixelConvA(512, 512),
+            PixelConvA(depth, depth),
 
-            PixelConvB(512, norm=True),
-            PixelConvB(512, norm=True),
-            PixelConvB(512, norm=True),
-            PixelConvB(512, norm=True),
-            PixelAttention(512),
+            PixelConvB(depth, norm=True),
+            PixelConvB(depth, norm=True),
+            PixelConvB(depth, norm=True),
+            PixelConvB(depth, norm=True),
+            PixelAttention(depth, num_heads=num_heads),
 
-            PixelConvB(512, norm=True),
-            PixelConvB(512, norm=True),
-            PixelConvB(512, norm=True),
-            PixelConvB(512, norm=True),
-            PixelConvB(512, norm=True),
-            PixelAttention(512),
+            PixelConvB(depth, norm=True),
+            PixelConvB(depth, norm=True),
+            PixelConvB(depth, norm=True),
+            PixelConvB(depth, norm=True),
+            PixelConvB(depth, norm=True),
+            PixelAttention(depth, num_heads=num_heads),
 
-            PixelConvB(512, norm=True),
-            PixelConvB(512, norm=True),
-            PixelConvB(512, norm=True),
-            PixelConvB(512, norm=True),
-            PixelConvB(512, norm=True),
-            PixelAttention(512),
+            PixelConvB(depth, norm=True),
+            PixelConvB(depth, norm=True),
+            PixelConvB(depth, norm=True),
+            PixelConvB(depth, norm=True),
+            PixelConvB(depth, norm=True),
+            PixelAttention(depth, num_heads=num_heads),
 
-            PixelConvB(512, norm=True),
-            PixelConvB(512, norm=True),
-            PixelConvB(512, norm=True),
-            PixelConvB(512, norm=True),
-            PixelConvB(512, norm=True),
-            PixelAttention(512),
+            PixelConvB(depth, norm=True),
+            PixelConvB(depth, norm=True),
+            PixelConvB(depth, norm=True),
+            PixelConvB(depth, norm=True),
+            PixelConvB(depth, norm=True),
+            PixelAttention(depth, num_heads=num_heads),
         )
         self.out_stack = nn.Sequential(
-            nn.Conv2d(1024, 512, 1),
-            Residual1x1(512),
-            Residual1x1(512),
-            Residual1x1(512),
-            Residual1x1(512),
-            Residual1x1(512),
-            Residual1x1(512),
-            Residual1x1(512),
-            Residual1x1(512),
-            Residual1x1(512),
-            Residual1x1(512),
-            nn.Conv2d(512, 512, 1),
+            nn.Conv2d(depth * 2, depth, 1),
+            Residual1x1(depth),
+            Residual1x1(depth),
+            Residual1x1(depth),
+            Residual1x1(depth),
+            Residual1x1(depth),
+            Residual1x1(depth),
+            Residual1x1(depth),
+            Residual1x1(depth),
+            Residual1x1(depth),
+            Residual1x1(depth),
+            nn.Conv2d(depth, 512, 1),
         )
 
     def forward(self, x):

@@ -42,7 +42,8 @@ def main():
     with torch.no_grad():
         full_latents = torch.from_numpy(results).to(device)
         top_embedded = vae.encoders[1].vq.embed(full_latents)
-        bottom_embedded = vae.decoders[0]([top_embedded])
+        bottom_encoded = vae.decoders[0]([top_embedded])
+        bottom_embedded, _, _ = vae.encoders[0].vq(bottom_encoded)
         decoded = torch.clamp(vae.decoders[1]([top_embedded, bottom_embedded]), 0, 1)
     decoded = decoded.permute(0, 2, 3, 1).cpu().numpy()
     decoded = np.concatenate(decoded, axis=1)

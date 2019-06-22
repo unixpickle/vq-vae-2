@@ -32,7 +32,7 @@ def main():
     results = np.zeros([NUM_SAMPLES, 32, 32], dtype=np.long)
     for row in range(results.shape[1]):
         for col in range(results.shape[2]):
-            partial_in = torch.from_numpy(results).to(device)
+            partial_in = torch.from_numpy(results[:, :row + 1]).to(device)
             with torch.no_grad():
                 outputs = torch.softmax(top_prior(partial_in), dim=1).cpu().numpy()
             for i, out in enumerate(outputs):

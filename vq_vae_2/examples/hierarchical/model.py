@@ -73,11 +73,86 @@ class TopPrior(nn.Module):
         return self.out_stack(torch.cat([out1, out2], dim=1))
 
 
+class BottomPrior(nn.Module):
+    def __init__(self, depth=128, num_heads=2):
+        super().__init__()
+        self.embed_top = nn.Embedding(512, depth)
+        self.embed_bottom = nn.Embedding(512, depth)
+        self.cond_stack = nn.Sequential(
+            Residual3x3(depth),
+            Residual3x3(depth),
+            Residual3x3(depth),
+            Residual3x3(depth),
+            Residual3x3(depth),
+            Residual3x3(depth),
+            Residual3x3(depth),
+            Residual3x3(depth),
+            Residual3x3(depth),
+            nn.ConvTranspose2d(depth, depth, 4, stride=2, padding=2),
+        )
+        self.pixel_cnn = PixelCNN(
+            PixelConvA(depth, depth),
+
+            PixelConvB(depth, norm=True),
+            PixelConvB(depth, norm=True),
+            PixelConvB(depth, norm=True),
+            PixelConvB(depth, norm=True),
+
+            PixelConvB(depth, norm=True),
+            PixelConvB(depth, norm=True),
+            PixelConvB(depth, norm=True),
+            PixelConvB(depth, norm=True),
+            PixelConvB(depth, norm=True),
+
+            PixelConvB(depth, norm=True),
+            PixelConvB(depth, norm=True),
+            PixelConvB(depth, norm=True),
+            PixelConvB(depth, norm=True),
+            PixelConvB(depth, norm=True),
+
+            PixelConvB(depth, norm=True),
+            PixelConvB(depth, norm=True),
+            PixelConvB(depth, norm=True),
+            PixelConvB(depth, norm=True),
+            PixelConvB(depth, norm=True),
+        )
+        self.out_stack = nn.Sequential(
+            nn.Conv2d(depth * 2, depth, 1),
+            nn.Conv2d(depth, 512, 1),
+        )
+
+    def forward(self, bottom, top):
+        conds = self.embed_top(top)
+        conds = conds.permute(0, 3, 1, 2).contiguous()
+        conds = self.cond_stack(conds)
+
+        out = self.embed_bottom(bottom)
+        out = out.permute(0, 3, 1, 2).contiguous()
+        out1, out2 = self.pixel_cnn(out, conds=conds)
+        return self.out_stack(torch.cat([out1, out2], dim=1))
+
+
 class Residual1x1(nn.Module):
     def __init__(self, num_channels):
         super().__init__()
         self.conv1 = nn.Conv2d(num_channels, num_channels, 1)
         self.conv2 = nn.Conv2d(num_channels, num_channels, 1)
+        self.norm = ChannelNorm(num_channels)
+
+    def forward(self, x):
+        inputs = x
+        x = F.relu(x)
+        x = self.conv1(x)
+        x = F.relu(x)
+        x = self.conv2(x)
+        return inputs + self.norm(x)
+
+
+class Residual3x3(nn.Module):
+    def __init__(self, num_channels):
+        super().__init__()
+        self.conv1 = nn.Conv2d(num_channels, num_channels, 3, padding=1)
+        self.conv2 = nn.Conv2d(num_channels, num_channels, 3, padding=1)
         self.norm = ChannelNorm(num_channels)
 
     def forward(self, x):

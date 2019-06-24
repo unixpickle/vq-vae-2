@@ -88,7 +88,7 @@ class BottomPrior(nn.Module):
             Residual3x3(depth),
             Residual3x3(depth),
             Residual3x3(depth),
-            nn.ConvTranspose2d(depth, depth, 4, stride=2, padding=2),
+            nn.ConvTranspose2d(depth, depth, 4, stride=2, padding=1),
         )
         self.pixel_cnn = PixelCNN(
             PixelConvA(depth, depth, cond_depth=depth),

@@ -237,39 +237,45 @@ class VQVAE(nn.Module):
         Compute training losses for a batch of inputs.
 
         Args:
-            inputs: the input Tensor.
+            inputs: the input Tensor. If this is a Tensor
+              of integers, then cross-entropy loss will be
+              used for the final decoder. Otherwise, MSE
+              will be used.
             commitment: the commitment loss coefficient.
 
         Returns:
             A dict of Tensors, containing at least:
               loss: the total training loss.
-              mse: the MSE from each decoder.
+              losses: the MSE/log-loss from each decoder.
               reconstructions: a reconstruction Tensor
                 from each decoder.
         """
         all_encoded = [inputs]
         all_vq_outs = []
         total_vq_loss = 0.0
-        total_vq_mse = 0.0
+        total_recon_loss = 0.0
         for encoder in self.encoders:
             encoded = encoder.encode(all_encoded[-1])
             embedded, embedded_pt, _ = encoder.vq(encoded)
             all_encoded.append(encoded)
             all_vq_outs.append(embedded_pt)
             total_vq_loss = total_vq_loss + vq_loss(encoded, embedded, commitment=commitment)
-        mses = []
+        losses = []
         reconstructions = []
         for i, decoder in enumerate(self.decoders):
             dec_inputs = all_vq_outs[::-1][:i + 1]
             target = all_encoded[::-1][i + 1]
             recon = decoder(dec_inputs)
             reconstructions.append(recon)
-            mse = torch.mean(torch.pow(recon - target, 2))
-            total_vq_mse = total_vq_mse + mse
-            mses.append(mse)
+            if target.dtype.is_floating_point:
+                recon_loss = torch.mean(torch.pow(recon - target, 2))
+            else:
+                recon_loss = F.cross_entropy(recon, target)
+            total_recon_loss = total_recon_loss + recon_loss
+            losses.append(recon_loss)
         return {
-            'loss': total_vq_loss + total_vq_mse,
-            'mse': mses,
+            'loss': total_vq_loss + total_recon_loss,
+            'losses': losses,
             'reconstructions': reconstructions,
         }
 

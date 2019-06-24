@@ -30,7 +30,7 @@ def main():
         images = next(data).to(device)
         terms = model(images)
         print('step %d: mse=%f mse_top=%f' %
-              (i, terms['mse'][-1].item(), terms['mse'][0].item()))
+              (i, terms['losses'][-1].item(), terms['losses'][0].item()))
         optimizer.zero_grad()
         terms['loss'].backward()
         optimizer.step()

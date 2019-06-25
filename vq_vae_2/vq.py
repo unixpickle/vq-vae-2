@@ -120,9 +120,12 @@ class VQ(nn.Module):
             if inputs_numpy is None:
                 inputs_numpy = inputs.detach().cpu().numpy().reshape([-1, inputs.shape[-1]])
             new_dictionary[i] = random.choice(inputs_numpy)
+            counts[i] = self.dead_rate
         if new_dictionary is not None:
             dict_tensor = torch.from_numpy(new_dictionary).to(self.dictionary.device)
+            counts_tensor = torch.from_numpy(counts).to(self.usage_count.device)
             self.dictionary.data.copy_(dict_tensor)
+            self.usage_count.data.copy_(counts_tensor)
 
 
 def embedding_distances(dictionary, tensor):

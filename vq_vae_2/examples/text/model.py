@@ -6,7 +6,7 @@ import torch.nn as nn
 
 from vq_vae_2.vq_vae import Decoder, Encoder, VQVAE
 
-DEAD_RATE = 1000
+DEAD_RATE = 100
 
 
 def make_vae():

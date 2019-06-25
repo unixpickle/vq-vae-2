@@ -6,6 +6,8 @@ import torch.nn as nn
 
 from vq_vae_2.vq_vae import Decoder, Encoder, VQVAE
 
+DEAD_RATE = 1000
+
 
 def make_vae():
     return VQVAE([BottomEncoder(), HighEncoder(), HighEncoder()],
@@ -15,7 +17,7 @@ def make_vae():
 
 class BottomEncoder(Encoder):
     def __init__(self, num_channels=512, num_latents=512):
-        super().__init__(num_channels, num_latents)
+        super().__init__(num_channels, num_latents, dead_rate=DEAD_RATE)
         self.embed = nn.Embedding(256, num_channels)
         self.stack = nn.Sequential(
             nn.Conv1d(num_channels, num_channels, 5, padding=2),
@@ -35,7 +37,7 @@ class BottomEncoder(Encoder):
 
 class HighEncoder(Encoder):
     def __init__(self, num_channels=512, num_latents=512):
-        super().__init__(num_channels, num_latents)
+        super().__init__(num_channels, num_latents, dead_rate=DEAD_RATE)
         self.stack = nn.Sequential(
             nn.Conv1d(num_channels, num_channels, 5, padding=2),
             nn.ReLU(),

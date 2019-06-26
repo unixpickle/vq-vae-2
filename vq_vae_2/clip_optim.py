@@ -23,7 +23,7 @@ class ClipOptim(optim.Adam):
       kwargs: arguments for Adam.
     """
 
-    def __init__(self, params, clip_frac=0.05, hist_size=100, **kwargs):
+    def __init__(self, params, clip_frac=0.05, hist_size=95, **kwargs):
         super().__init__(params, **kwargs)
         self.clip_frac = clip_frac
         self.hist_size = hist_size

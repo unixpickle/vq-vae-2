@@ -249,6 +249,9 @@ class VQVAE(nn.Module):
               losses: the MSE/log-loss from each decoder.
               reconstructions: a reconstruction Tensor
                 from each decoder.
+              embedded: outputs from every encoder, passed
+                through the vector-quantization table.
+                Ordered from bottom to top level.
         """
         all_encoded = [inputs]
         all_vq_outs = []
@@ -277,7 +280,38 @@ class VQVAE(nn.Module):
             'loss': total_vq_loss + total_recon_loss,
             'losses': losses,
             'reconstructions': reconstructions,
+            'embedded': all_vq_outs,
         }
+
+    def full_reconstructions(self, inputs):
+        """
+        Compute reconstructions of the inputs using all
+        the different layers of the hierarchy.
+
+        The first reconstruction uses only information
+        from the top-level codes, the second uses only
+        information from the top-level and second-to-top
+        level codes, etc.
+
+        This is not forward(inputs)['reconstructions'],
+        since said reconstructions are simply each level's
+        reconstruction of the next level's features.
+        Instead, full_reconstructions reconstructs the
+        original inputs.
+        """
+        terms = self(inputs)
+        layer_recons = []
+        for encoder, recon in zip(self.encoders[::-1], terms['reconstructions'][:-1]):
+            _, embedded_pt, _ = encoder.vq(recon)
+            layer_recons.append(embedded_pt)
+        hierarchy_size = len(self.decoders)
+        results = []
+        for i in range(hierarchy_size - 1):
+            num_actual = i + 1
+            dec_in = terms['embedded'][-num_actual:][::-1] + layer_recons[num_actual - 1:]
+            results.append(self.decoders[-1](dec_in))
+        results.append(terms['reconstructions'][-1])
+        return results
 
 
 def _make_residual(channels):

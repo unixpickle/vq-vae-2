@@ -36,19 +36,16 @@ def main():
         optimizer.step()
         if not i % 30:
             torch.save(model.state_dict(), VAE_PATH)
-            save_reconstructions(model, images, terms)
+            save_reconstructions(model, images)
 
 
-def save_reconstructions(vae, images, terms):
-    real_recons = torch.clamp(terms['reconstructions'][-1], 0, 1)
-    real_recons = real_recons.permute(0, 2, 3, 1).detach().cpu().numpy()
-
-    # Create reconstructions using only the top latents.
-    top_embed, _, _ = vae.encoders[1](vae.encoders[0].encode(images))
-    bottom_embed, _, _ = vae.encoders[0].vq(terms['reconstructions'][0])
-    top_recons = torch.clamp(vae.decoders[1]([top_embed, bottom_embed]), 0, 1)
-    top_recons = top_recons.permute(0, 2, 3, 1).detach().cpu().numpy()
-
+def save_reconstructions(vae, images):
+    vae.eval()
+    with torch.no_grad():
+        recons = [torch.clamp(x, 0, 1).permute(0, 2, 3, 1).detach().cpu().numpy()
+                  for x in vae.full_reconstructions(images)]
+    vae.train()
+    top_recons, real_recons = recons
     images = images.permute(0, 2, 3, 1).detach().cpu().numpy()
 
     columns = np.concatenate([top_recons, real_recons, images], axis=-2)

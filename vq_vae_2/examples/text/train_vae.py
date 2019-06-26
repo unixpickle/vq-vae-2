@@ -6,8 +6,8 @@ import argparse
 import os
 
 import torch
-import torch.optim as optim
 
+from vq_vae_2.clip_optim import ClipOptim
 from vq_vae_2.examples.text.data import load_text_samples
 from vq_vae_2.examples.text.model import make_vae
 
@@ -23,7 +23,7 @@ def main():
         vae.load_state_dict(torch.load(VAE_PATH, map_location='cpu'))
     vae.to(device)
 
-    optimizer = optim.Adam(vae.parameters(), lr=1e-4)
+    optimizer = ClipOptim(vae.parameters(), lr=1e-4)
 
     for i, batch in enumerate(load_text_samples(args.data, args.batch_size, args.context_len)):
         batch = batch.to(device)

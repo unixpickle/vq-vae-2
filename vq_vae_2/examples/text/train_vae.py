@@ -4,7 +4,6 @@ Train a hierarchical VAE on text data.
 
 import argparse
 import os
-import sys
 
 import torch
 import torch.optim as optim
@@ -35,18 +34,6 @@ def main():
         optimizer.step()
         if not i % 100:
             torch.save(vae.state_dict(), VAE_PATH)
-            print_reconstruction(batch, terms)
-
-
-def print_reconstruction(batch, terms):
-    original = bytes(batch[0].detach().cpu().numpy().tolist())
-    recons = terms['reconstructions'][-1]
-    reconstructed = bytes(torch.argmax(recons[0], dim=-1).detach().cpu().numpy().tolist())
-    sys.stdout.buffer.write(original)
-    sys.stdout.buffer.write(b' -> ')
-    sys.stdout.buffer.write(reconstructed)
-    sys.stdout.buffer.write(b'\n')
-    sys.stdout.buffer.flush()
 
 
 def arg_parser():

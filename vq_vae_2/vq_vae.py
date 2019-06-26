@@ -271,7 +271,7 @@ class VQVAE(nn.Module):
             recon = decoder(dec_inputs)
             reconstructions.append(recon)
             if target.dtype.is_floating_point:
-                recon_loss = torch.mean(torch.pow(recon - target, 2))
+                recon_loss = torch.mean(torch.pow(recon - target.detach(), 2))
             else:
                 recon_loss = F.cross_entropy(recon.view(-1, recon.shape[-1]), target.view(-1))
             total_recon_loss = total_recon_loss + recon_loss

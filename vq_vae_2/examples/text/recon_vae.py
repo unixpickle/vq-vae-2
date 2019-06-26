@@ -23,6 +23,7 @@ def main():
     vae.to(device)
 
     batch = next(load_text_samples(args.data, 1, args.context_len))
+    batch = batch.to(device)
     print_bytes('Original', batch[0])
     recons = vae.full_reconstructions(batch)
     for j, recon in enumerate(recons):

@@ -283,6 +283,16 @@ class VQVAE(nn.Module):
             'embedded': all_vq_outs,
         }
 
+    def revive_dead_entries(self):
+        """
+        Revive dead entries from all of the VQ layers.
+
+        Only call this once the encoders have all been
+        through a forward pass in training mode.
+        """
+        for enc in self.encoders:
+            enc.vq.revive_dead_entries()
+
     def full_reconstructions(self, inputs):
         """
         Compute reconstructions of the inputs using all

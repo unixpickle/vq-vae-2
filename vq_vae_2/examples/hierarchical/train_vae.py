@@ -34,6 +34,7 @@ def main():
         optimizer.zero_grad()
         terms['loss'].backward()
         optimizer.step()
+        model.revive_dead_entries()
         if not i % 30:
             torch.save(model.state_dict(), VAE_PATH)
             save_reconstructions(model, images)

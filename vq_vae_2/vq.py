@@ -45,6 +45,7 @@ class VQ(nn.Module):
         self.dictionary = nn.Parameter(torch.randn(num_latents, num_channels))
         self.usage_count = nn.Parameter(dead_rate * torch.ones(num_latents).long(),
                                         requires_grad=False)
+        self._last_batch = None
 
     def embed(self, idxs):
         """
@@ -96,19 +97,24 @@ class VQ(nn.Module):
 
         if self.training:
             self._update_tracker(idxs)
-            self._reinit_dead_centers(channels_last)
+            self._last_batch = channels_last.detach()
 
         return embedded, embedded_pt, idxs
 
-    def _update_tracker(self, idxs):
-        raw_idxs = set(idxs.detach().cpu().numpy().flatten())
-        update = -np.ones([self.num_latents], dtype=np.int)
-        for idx in raw_idxs:
-            update[idx] = self.dead_rate
-        self.usage_count.data.add_(torch.from_numpy(update).to(self.usage_count.device).long())
-        self.usage_count.data.clamp_(0, self.dead_rate)
+    def revive_dead_entries(self, inputs=None):
+        """
+        Use the dictionary usage tracker to re-initialize
+        entries that aren't being used often.
 
-    def _reinit_dead_centers(self, inputs):
+        Args:
+          inputs: a batch of inputs from which random
+            values are sampled for new entries. If None,
+            the previous input to forward() is used.
+        """
+        if inputs is None:
+            assert self._last_batch is not None, ('cannot revive dead entries until a batch has ' +
+                                                  'been run')
+            inputs = self._last_batch
         counts = self.usage_count.detach().cpu().numpy()
         new_dictionary = None
         inputs_numpy = None
@@ -126,6 +132,14 @@ class VQ(nn.Module):
             counts_tensor = torch.from_numpy(counts).to(self.usage_count.device)
             self.dictionary.data.copy_(dict_tensor)
             self.usage_count.data.copy_(counts_tensor)
+
+    def _update_tracker(self, idxs):
+        raw_idxs = set(idxs.detach().cpu().numpy().flatten())
+        update = -np.ones([self.num_latents], dtype=np.int)
+        for idx in raw_idxs:
+            update[idx] = self.dead_rate
+        self.usage_count.data.add_(torch.from_numpy(update).to(self.usage_count.device).long())
+        self.usage_count.data.clamp_(0, self.dead_rate)
 
 
 def embedding_distances(dictionary, tensor):

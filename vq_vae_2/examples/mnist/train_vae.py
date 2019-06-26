@@ -30,6 +30,7 @@ def main():
         optimizer.zero_grad()
         terms['loss'].backward()
         optimizer.step()
+        vae.revive_dead_entries()
         if not i % 10:
             torch.save(vae.state_dict(), 'vae.pt')
         if not i % 100:

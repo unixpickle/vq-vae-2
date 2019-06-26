@@ -49,7 +49,7 @@ class ClipOptim(optim.Adam):
     def _magnitude_to_clip(self):
         if len(self._history) < self.hist_size:
             return math.inf
-        return sorted(self._history)[math.round(self.hist_size * (1 - self.clip_frac))]
+        return sorted(self._history)[round(self.hist_size * (1 - self.clip_frac))]
 
 
 def _scale_update(old_params, params, scale):

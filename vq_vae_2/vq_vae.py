@@ -301,7 +301,7 @@ class VQVAE(nn.Module):
         """
         terms = self(inputs)
         layer_recons = []
-        for encoder, recon in zip(self.encoders[::-1], terms['reconstructions'][:-1]):
+        for encoder, recon in zip(self.encoders[:-1][::-1], terms['reconstructions'][:-1]):
             _, embedded_pt, _ = encoder.vq(recon)
             layer_recons.append(embedded_pt)
         hierarchy_size = len(self.decoders)

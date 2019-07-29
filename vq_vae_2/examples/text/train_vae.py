@@ -31,7 +31,7 @@ def main():
     for i, batch in enumerate(load_text_samples(args.data, args.batch_size, args.context_len)):
         batch = batch.to(device)
         terms = vae(batch)
-        loss = terms['loss'].item()
+        loss = terms['losses'][-1].item()
         if not resetter.step(loss):
             print('step %d: reset with loss %f' % (i, loss))
             continue
@@ -61,10 +61,11 @@ class StateResetter:
 
     def step(self, loss):
         if self.last_loss is not None and loss > self.last_loss * MAX_LOSS_GAIN:
-            self.model.load_state_dict(self.state_history[0])
+            for p, x in zip(self.model.parameters(), self.state_history[0]):
+                p.copy_(x)
             return False
         self.last_loss = loss
-        self.state_history.append(self.model.state_dict())
+        self.state_history.append([x.clone() for x in self.model.parameters()])
         self.state_history = self.state_history[-STATE_BACKTRACK_COUNT:]
         return True
 

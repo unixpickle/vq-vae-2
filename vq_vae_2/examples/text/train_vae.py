@@ -12,6 +12,7 @@ from vq_vae_2.examples.text.data import load_text_samples
 from vq_vae_2.examples.text.model import make_vae
 
 VAE_PATH = 'vae.pt'
+MAX_LOSS_GAIN = 3
 
 
 def main():
@@ -25,10 +26,20 @@ def main():
 
     optimizer = optim.Adam(vae.parameters(), lr=1e-4)
 
+    last_loss = None
+    last_state = None
     for i, batch in enumerate(load_text_samples(args.data, args.batch_size, args.context_len)):
+        state = vae.state_dict()
         batch = batch.to(device)
         terms = vae(batch)
-        print('step %d: loss=%f' % (i, terms['losses'][-1].item()))
+        loss = terms['losses'][-1].item()
+        if last_loss is not None and loss > MAX_LOSS_GAIN * last_loss:
+            vae.load_state_dict(last_state)
+            print('step %d: reset with loss %f' % (i, loss))
+            continue
+        last_loss = loss
+        last_state = state
+        print('step %d: loss=%f' % (i, loss))
         optimizer.zero_grad()
         terms['loss'].backward()
         optimizer.step()

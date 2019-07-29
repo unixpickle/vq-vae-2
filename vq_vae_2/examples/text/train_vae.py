@@ -32,7 +32,7 @@ def main():
         state = vae.state_dict()
         batch = batch.to(device)
         terms = vae(batch)
-        loss = terms['losses'][-1].item()
+        loss = terms['loss'][-1].item()
         if last_loss is not None and loss > MAX_LOSS_GAIN * last_loss:
             vae.load_state_dict(last_state)
             print('step %d: reset with loss %f' % (i, loss))

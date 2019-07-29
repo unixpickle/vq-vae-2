@@ -31,7 +31,7 @@ def main():
     for i, batch in enumerate(load_text_samples(args.data, args.batch_size, args.context_len)):
         batch = batch.to(device)
         terms = vae(batch)
-        loss = terms['loss'][-1].item()
+        loss = terms['loss'].item()
         if not resetter.step(loss):
             print('step %d: reset with loss %f' % (i, loss))
             continue

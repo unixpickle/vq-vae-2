@@ -12,8 +12,6 @@ from vq_vae_2.examples.text.data import load_text_samples
 from vq_vae_2.examples.text.model import make_vae
 
 VAE_PATH = 'vae.pt'
-MAX_LOSS_GAIN = 3
-STATE_BACKTRACK_COUNT = 3
 
 
 def main():
@@ -27,15 +25,10 @@ def main():
 
     optimizer = optim.Adam(vae.parameters(), lr=1e-4)
 
-    resetter = StateResetter(vae)
     for i, batch in enumerate(load_text_samples(args.data, args.batch_size, args.context_len)):
         batch = batch.to(device)
         terms = vae(batch)
-        loss = terms['losses'][-1].item()
-        if not resetter.step(loss):
-            print('step %d: reset with loss %f' % (i, loss))
-            continue
-        print('step %d: loss=%f' % (i, loss))
+        print('step %d: loss=%f' % (i, terms['losses'][-1].item()))
         optimizer.zero_grad()
         terms['loss'].backward()
         optimizer.step()
@@ -51,23 +44,6 @@ def arg_parser():
     parser.add_argument('--context-len', help='context size in bytes', default=512, type=int)
     parser.add_argument('data', help='data file')
     return parser
-
-
-class StateResetter:
-    def __init__(self, model):
-        self.model = model
-        self.state_history = []
-        self.last_loss = None
-
-    def step(self, loss):
-        if self.last_loss is not None and loss > self.last_loss * MAX_LOSS_GAIN:
-            for p, x in zip(self.model.parameters(), self.state_history[0]):
-                p.copy_(x)
-            return False
-        self.last_loss = loss
-        self.state_history.append([x.clone() for x in self.model.parameters()])
-        self.state_history = self.state_history[-STATE_BACKTRACK_COUNT:]
-        return True
 
 
 if __name__ == '__main__':

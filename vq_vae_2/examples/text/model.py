@@ -21,7 +21,7 @@ class BottomEncoder(Encoder):
         self.embed = nn.Embedding(256, num_channels)
         self.stack = nn.Sequential(
             nn.Conv1d(num_channels, num_channels, 5, padding=2),
-            nn.ReLU(),
+            nn.Tanh(),
             nn.Conv1d(num_channels, num_channels, 3, stride=2, padding=1),
             Residual1d(num_channels),
             Residual1d(num_channels),
@@ -40,7 +40,7 @@ class HighEncoder(Encoder):
         super().__init__(num_channels, num_latents, dead_rate=DEAD_RATE)
         self.stack = nn.Sequential(
             nn.Conv1d(num_channels, num_channels, 5, padding=2),
-            nn.ReLU(),
+            nn.Tanh(),
             nn.Conv1d(num_channels, num_channels, 3, stride=2, padding=1),
             Residual1d(num_channels),
             Residual1d(num_channels),
@@ -86,9 +86,9 @@ class Residual1d(nn.Module):
     def __init__(self, num_channels):
         super().__init__()
         self.stack = nn.Sequential(
-            nn.ReLU(),
+            nn.Tanh(),
             nn.Conv1d(num_channels, num_channels, 3, padding=1),
-            nn.ReLU(),
+            nn.Tanh(),
             nn.Conv1d(num_channels, num_channels, 3, padding=1)
         )
 

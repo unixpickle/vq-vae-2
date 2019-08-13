@@ -113,19 +113,26 @@ class TopPrior(nn.Module):
 
 
 class AttentionLayer(nn.Module):
-    def __init__(self, depth, num_heads):
+    def __init__(self, depth, num_heads, hidden=2048):
         super().__init__()
         self.attention = MaskedAttention(depth, num_heads=num_heads)
-        self.fc = nn.Conv1d(depth, depth, 1)
-        self.norm = nn.LayerNorm(depth)
+        self.fc1 = nn.Conv1d(depth, hidden, 1)
+        self.fc2 = nn.Conv1d(hidden, depth, 1)
+        self.norm1 = nn.LayerNorm(depth)
+        self.norm2 = nn.LayerNorm(depth)
 
     def forward(self, x):
         original = x
         x = self.attention(x)
+        x = self.norm1(x + original)
+
+        original = x
         x = x.permute(0, 2, 1).contiguous()
-        x = self.fc(x)
-        x = x.permute(0, 2, 1).contiguous()
+        x = self.fc1(x)
         x = F.relu(x)
+        x = self.fc2(x)
+        x = F.relu(x)
+        x = x.permute(0, 2, 1).contiguous()
         return self.norm(x + original)
 
 

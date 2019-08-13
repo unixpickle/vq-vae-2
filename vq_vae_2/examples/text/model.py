@@ -88,12 +88,12 @@ class TopPrior(nn.Module):
     def __init__(self, depth=256, num_heads=4):
         super().__init__()
         self.embed = nn.Embedding(512, depth)
-        self.layer1 = MaskedAttention(depth, num_heads=num_heads)
-        self.layer1_fc = nn.Conv1d(depth, depth, 1)
-        self.layer2 = MaskedAttention(depth, num_heads=num_heads)
-        self.layer2_fc = nn.Conv1d(depth, depth, 1)
-        self.layer3 = MaskedAttention(depth, num_heads=num_heads)
-        self.layer3_fc = nn.Conv1d(depth, depth, 1)
+        self.attention = nn.Sequential(
+            AttentionLayer(depth, num_heads),
+            AttentionLayer(depth, num_heads),
+            AttentionLayer(depth, num_heads),
+            AttentionLayer(depth, num_heads),
+        )
         self.out_stack = nn.Sequential(
             nn.Conv1d(depth, depth, 1),
             nn.ReLU(),
@@ -104,9 +104,7 @@ class TopPrior(nn.Module):
 
     def forward(self, x):
         x = self.embed(x)
-        x = self.layer1(x)
-        x = self.layer1_fc(x.permute(0, 2, 1).contiguous()).permute(0, 2, 1).contiguous()
-        x = F.relu(x)
+
         x = self.layer2(x)
         x = self.layer2_fc(x.permute(0, 2, 1).contiguous()).permute(0, 2, 1).contiguous()
         x = F.relu(x)
@@ -116,6 +114,21 @@ class TopPrior(nn.Module):
         x = x.permute(0, 2, 1).contiguous()
         x = self.out_stack(x)
         return x
+
+
+class AttentionLayer(nn.Module):
+    def __init__(self, depth, num_heads):
+        self.attention = MaskedAttention(depth, num_heads=num_heads)
+        self.fc = nn.Conv1d(depth, depth, 1)
+
+    def forward(self, x):
+        original = x
+        x = self.attention(x)
+        x = x.permute(0, 2, 1).contiguous()
+        x = self.fc(x)
+        x = x.permute(0, 2, 1).contiguous()
+        x = F.relu(x)
+        return x + original
 
 
 class Residual1d(nn.Module):

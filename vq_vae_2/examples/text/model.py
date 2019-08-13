@@ -2,6 +2,7 @@
 Models for compressing natural language.
 """
 
+import torch
 import torch.nn as nn
 import torch.nn.functional as F
 
@@ -103,6 +104,7 @@ class TopPrior(nn.Module):
         )
 
     def forward(self, x):
+        x = torch.cat([torch.zeros_like(x[:, :1]), x[:, :-1]], dim=1)
         x = self.embed(x)
         x = self.attention(x)
         x = x.permute(0, 2, 1).contiguous()

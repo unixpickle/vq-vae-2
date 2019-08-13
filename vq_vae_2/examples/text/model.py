@@ -117,6 +117,7 @@ class AttentionLayer(nn.Module):
         super().__init__()
         self.attention = MaskedAttention(depth, num_heads=num_heads)
         self.fc = nn.Conv1d(depth, depth, 1)
+        self.norm = nn.LayerNorm(depth)
 
     def forward(self, x):
         original = x
@@ -125,7 +126,7 @@ class AttentionLayer(nn.Module):
         x = self.fc(x)
         x = x.permute(0, 2, 1).contiguous()
         x = F.relu(x)
-        return x + original
+        return self.norm(x + original)
 
 
 class Residual1d(nn.Module):

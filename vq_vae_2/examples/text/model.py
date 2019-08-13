@@ -96,9 +96,9 @@ class TopPrior(nn.Module):
         self.layer3_fc = nn.Conv1d(depth, depth, 1)
         self.out_stack = nn.Sequential(
             nn.Conv1d(depth, depth, 1),
-            nn.ReLU,
+            nn.ReLU(),
             nn.Conv1d(depth, depth, 1),
-            nn.ReLU,
+            nn.ReLU(),
             nn.Conv1d(depth, 512, 1),
         )
 

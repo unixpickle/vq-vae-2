@@ -94,6 +94,10 @@ class TopPrior(nn.Module):
             AttentionLayer(depth, num_heads),
             AttentionLayer(depth, num_heads),
             AttentionLayer(depth, num_heads),
+            AttentionLayer(depth, num_heads),
+            AttentionLayer(depth, num_heads),
+            AttentionLayer(depth, num_heads),
+            AttentionLayer(depth, num_heads),
         )
         self.out_stack = nn.Sequential(
             nn.Conv1d(depth, depth, 1),
@@ -133,7 +137,7 @@ class AttentionLayer(nn.Module):
         x = self.fc2(x)
         x = F.relu(x)
         x = x.permute(0, 2, 1).contiguous()
-        return self.norm(x + original)
+        return self.norm2(x + original)
 
 
 class Residual1d(nn.Module):

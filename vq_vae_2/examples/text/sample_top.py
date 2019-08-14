@@ -33,7 +33,8 @@ def main():
     latents = np.zeros([1, args.context_len // 8], dtype=np.int64)
     for i in range(args.context_len // 8):
         outs = top_prior(torch.from_numpy(latents[:, :i+1]).to(device))
-        latents[:, i] = [sample_softmax(x) for x in outs.detach().cpu().numpy()[:, :, i]]
+        probs = torch.softmax(outs, dim=1)
+        latents[:, i] = [sample_softmax(x) for x in probs.detach().cpu().numpy()[:, :, i]]
 
     embedded = vae.encoders[-1].vq.embed(torch.from_numpy(latents).to(device))
     decoded = [embedded]

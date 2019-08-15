@@ -116,6 +116,60 @@ class TopPrior(nn.Module):
         return x
 
 
+class LowPrior(nn.Module):
+    def __init__(self, num_inputs, depth=256, num_heads=4):
+        super().__init__()
+        self.embeddings = []
+        self.layers = []
+        for i in range(num_inputs - 1):
+            embed = nn.Embedding(512, depth)
+            stack = nn.Sequential(
+                Residual1d(depth),
+                Residual1d(depth),
+                nn.ConvTranspose1d(depth, depth, 4, stride=2, padding=1),
+            )
+            self.add_module('embed%d' % i, embed)
+            self.add_module('stack%d' % i, stack)
+            self.embeddings.append(embed)
+            self.layers.append(stack)
+        self.embed = nn.Embedding(512, depth)
+        self.attention = nn.Sequential(
+            AttentionLayer(depth, num_heads),
+            AttentionLayer(depth, num_heads),
+            AttentionLayer(depth, num_heads),
+            AttentionLayer(depth, num_heads),
+            AttentionLayer(depth, num_heads),
+            AttentionLayer(depth, num_heads),
+            AttentionLayer(depth, num_heads),
+            AttentionLayer(depth, num_heads),
+        )
+        self.out_stack = nn.Sequential(
+            nn.Conv1d(depth, depth, 1),
+            nn.ReLU(),
+            nn.Conv1d(depth, depth, 1),
+            nn.ReLU(),
+            nn.Conv1d(depth, 512, 1),
+        )
+
+    def forward(self, *inputs):
+        cond = None
+        for embed, layer, x in zip(self.embeddings, self.layers, inputs):
+            em = embed(x).permute(0, 2, 1).contiguous()
+            if cond is None:
+                cond = layer(em)
+            else:
+                cond = layer(cond + em)
+        cond = cond.permute(0, 2, 1).contiguous()
+        x = inputs[-1]
+        x = torch.cat([torch.zeros_like(x[:, :1]), x[:, :-1]], dim=1)
+        x = self.embed(x)
+        x = x + cond
+        x = self.attention(x)
+        x = x.permute(0, 2, 1).contiguous()
+        x = self.out_stack(x)
+        return x
+
+
 class AttentionLayer(nn.Module):
     def __init__(self, depth, num_heads, hidden=2048):
         super().__init__()

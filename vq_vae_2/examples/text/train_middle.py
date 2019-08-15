@@ -12,7 +12,7 @@ from vq_vae_2.examples.text.data import load_text_samples
 from vq_vae_2.examples.text.model import LowPrior, make_vae
 from vq_vae_2.examples.text.train_vae import VAE_PATH, arg_parser
 
-MIDDLE_PRIOR_PATH = 'top.pt'
+MIDDLE_PRIOR_PATH = 'middle.pt'
 
 
 def main():

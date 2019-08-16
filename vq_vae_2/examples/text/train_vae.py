@@ -23,7 +23,7 @@ def main():
         vae.load_state_dict(torch.load(VAE_PATH, map_location='cpu'))
     vae.to(device)
 
-    optimizer = optim.Adam(vae.parameters(), lr=1e-4)
+    optimizer = optim.Adam(vae.parameters(), lr=args.lr)
 
     for i, batch in enumerate(load_text_samples(args.data, args.batch_size, args.context_len)):
         batch = batch.to(device)
@@ -42,6 +42,7 @@ def arg_parser():
     parser.add_argument('--device', help='torch device', default='cuda')
     parser.add_argument('--batch-size', help='batch size', default=16, type=int)
     parser.add_argument('--context-len', help='context size in bytes', default=512, type=int)
+    parser.add_argument('--lr', help='learning rate', default=1e-4, type=float)
     parser.add_argument('data', help='data file')
     return parser
 

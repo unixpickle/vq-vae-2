@@ -29,7 +29,7 @@ def main():
         top_prior.load_state_dict(torch.load(TOP_PRIOR_PATH, map_location='cpu'))
     top_prior.to(device)
 
-    optimizer = optim.Adam(top_prior.parameters(), lr=1e-4)
+    optimizer = optim.Adam(top_prior.parameters(), lr=args.lr)
     loss_fn = nn.CrossEntropyLoss()
 
     for i, batch in enumerate(load_text_samples(args.data, args.batch_size, args.context_len)):

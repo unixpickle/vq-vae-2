@@ -126,6 +126,8 @@ class LowPrior(nn.Module):
             stack = nn.Sequential(
                 Residual1d(depth),
                 Residual1d(depth),
+                Residual1d(depth),
+                Residual1d(depth),
                 nn.ConvTranspose1d(depth, depth, 4, stride=2, padding=1),
             )
             self.add_module('embed%d' % i, embed)

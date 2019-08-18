@@ -43,6 +43,7 @@ def arg_parser():
     parser.add_argument('--batch-size', help='batch size', default=16, type=int)
     parser.add_argument('--context-len', help='context size in bytes', default=512, type=int)
     parser.add_argument('--lr', help='learning rate', default=1e-4, type=float)
+    parser.add_argument('--save-interval', help='steps per model save', default=30, type=int)
     parser.add_argument('data', help='data file')
     return parser
 

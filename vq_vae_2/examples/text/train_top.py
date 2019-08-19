@@ -45,7 +45,7 @@ def main():
         optimizer.zero_grad()
         loss.backward()
         optimizer.step()
-        if not i % 30:
+        if not i % args.save_interval:
             torch.save(top_prior.state_dict(), TOP_PRIOR_PATH)
 
 

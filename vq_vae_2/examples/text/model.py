@@ -117,7 +117,7 @@ class TopPrior(nn.Module):
 
 
 class LowPrior(nn.Module):
-    def __init__(self, num_inputs, depth=256, num_heads=4):
+    def __init__(self, num_inputs, depth=512, num_heads=8):
         super().__init__()
         self.embeddings = []
         self.layers = []
@@ -127,8 +127,8 @@ class LowPrior(nn.Module):
                 Residual1d(depth),
                 Residual1d(depth),
                 Residual1d(depth),
-                Residual1d(depth),
                 nn.ConvTranspose1d(depth, depth, 4, stride=2, padding=1),
+                Residual1d(depth),
             )
             self.add_module('embed%d' % i, embed)
             self.add_module('stack%d' % i, stack)

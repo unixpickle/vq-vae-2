@@ -25,7 +25,7 @@ def main():
     vae.to(device)
     vae.eval()
 
-    top_prior = TopPrior()
+    top_prior = TopPrior(args.context_len // 8)
     if os.path.exists(TOP_PRIOR_PATH):
         top_prior.load_state_dict(torch.load(TOP_PRIOR_PATH, map_location='cpu'))
     top_prior.to(device)

@@ -86,9 +86,10 @@ class HierarchyDecoder(Decoder):
 
 
 class TopPrior(nn.Module):
-    def __init__(self, depth=256, num_heads=4):
+    def __init__(self, seq_len, depth=256, num_heads=4):
         super().__init__()
         self.embed = nn.Embedding(512, depth)
+        self.pos_enc = nn.Parameter(torch.randn(1, seq_len, depth))
         self.attention = nn.Sequential(
             AttentionLayer(depth, num_heads),
             AttentionLayer(depth, num_heads),
@@ -110,6 +111,7 @@ class TopPrior(nn.Module):
     def forward(self, x):
         x = torch.cat([torch.zeros_like(x[:, :1]), x[:, :-1]], dim=1)
         x = self.embed(x)
+        x = x + self.pos_enc
         x = self.attention(x)
         x = x.permute(0, 2, 1).contiguous()
         x = self.out_stack(x)
@@ -117,7 +119,7 @@ class TopPrior(nn.Module):
 
 
 class LowPrior(nn.Module):
-    def __init__(self, num_inputs, depth=512, num_heads=8):
+    def __init__(self, num_inputs, seq_len, depth=512, num_heads=8):
         super().__init__()
         self.embeddings = []
         self.layers = []
@@ -135,6 +137,7 @@ class LowPrior(nn.Module):
             self.embeddings.append(embed)
             self.layers.append(stack)
         self.embed = nn.Embedding(512, depth)
+        self.pos_enc = nn.Parameter(torch.randn(1, seq_len, depth))
         self.attention = nn.Sequential(
             AttentionLayer(depth, num_heads),
             AttentionLayer(depth, num_heads),
@@ -166,6 +169,7 @@ class LowPrior(nn.Module):
         x = torch.cat([torch.zeros_like(x[:, :1]), x[:, :-1]], dim=1)
         x = self.embed(x)
         x = x + cond
+        x = x + self.pos_enc
         x = self.attention(x)
         x = x.permute(0, 2, 1).contiguous()
         x = self.out_stack(x)

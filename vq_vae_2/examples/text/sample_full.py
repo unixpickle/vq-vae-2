@@ -26,7 +26,7 @@ def main():
     vae.to(device)
     vae.eval()
 
-    top_prior = TopPrior()
+    top_prior = TopPrior(args.context_len // 8)
     if os.path.exists(TOP_PRIOR_PATH):
         top_prior.load_state_dict(torch.load(TOP_PRIOR_PATH, map_location='cpu'))
     top_prior.to(device)
@@ -34,7 +34,7 @@ def main():
     priors = [top_prior]
 
     for i, path in enumerate([MIDDLE_PRIOR_PATH, BOTTOM_PRIOR_PATH]):
-        prior = LowPrior(i + 2)
+        prior = LowPrior(i + 2, args.context_len >> (2 - i))
         if os.path.exists(path):
             prior.load_state_dict(torch.load(path, map_location='cpu'))
         prior.to(device)

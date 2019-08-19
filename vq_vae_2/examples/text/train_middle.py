@@ -24,7 +24,7 @@ def main(prior_path=MIDDLE_PRIOR_PATH, num_levels=2):
     vae.to(device)
     vae.eval()
 
-    prior = LowPrior(num_levels)
+    prior = LowPrior(num_levels, args.context_len >> (4 - num_levels))
     if os.path.exists(prior_path):
         prior.load_state_dict(torch.load(prior_path, map_location='cpu'))
     prior.to(device)
